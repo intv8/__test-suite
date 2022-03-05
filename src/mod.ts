@@ -12,8 +12,8 @@ import _decorators from "./decorators/mod.ts";
 export * from "./types.ts";
 export const decorators = _decorators;
 
-function TestRunner(testSuite: TTestCtor, options: ITestOptions = {}) {
-  executeTest(testSuite, options);
+async function TestRunner(testSuite: TTestCtor, options: ITestOptions = {}) {
+  await executeTest(testSuite, options);
 }
 
 const executeTest = (

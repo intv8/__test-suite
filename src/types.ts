@@ -9,7 +9,7 @@
  * An interface describing an object passed to any hook representing the test
  * suite metadata.
  */
-export interface IHookSuiteMeta {
+export interface ISuiteHookMetaData {
   /**
    * The original name of the test.
    */
@@ -49,7 +49,7 @@ export interface IHookSuiteMeta {
  * An interface describing an object passed to all but `TestSuite` hooks,
  * describing the current test metadata.
  */
-export interface IHookTestMeta {
+export interface ITestHookMetaData {
   /**
    * The complete test name, including the suite name and test case and
    * iteration meta, of the current test.
@@ -90,7 +90,7 @@ export interface IHookTestMeta {
  * An interface describing an object passed to `TestCase`, `TestIteration`, and
  * `TestFailure` hooks representing the current test case metadata.
  */
-export interface IHookTestCaseMeta<T = unknown> {
+export interface ITestCaseHookMetaData<T = unknown> {
   /**
    * The arguments list for the current test case.
    */
@@ -116,7 +116,7 @@ export interface IHookTestCaseMeta<T = unknown> {
  * An interface describing an object passed to `TestIteration` and
  * `TestFailure` hooks representing the current test case iteration metadata.
  */
-export interface IHookTestIterationMeta {
+export interface ITestIterationHookMetaData {
   /**
    * The index of the current iteration in regards to the total iterations
    * of the current test case of the current test.
@@ -141,7 +141,7 @@ export interface ISuiteHookMeta {
   /**
    * Metadata for the current test suite.
    */
-  suite: IHookSuiteMeta;
+  suite: ISuiteHookMetaData;
 }
 
 /**
@@ -151,7 +151,7 @@ export interface ITestHookMeta extends ISuiteHookMeta {
   /**
    * Metadata for the current test.
    */
-  test: IHookTestMeta;
+  test: ITestHookMetaData;
 }
 
 /**
@@ -161,7 +161,7 @@ export interface ITestCaseHookMeta extends ITestHookMeta {
   /**
    * Metadata for the current test case.
    */
-  testCase: IHookTestCaseMeta;
+  testCase: ITestCaseHookMetaData;
 }
 
 /**
@@ -171,87 +171,46 @@ export interface ITestIterationHookMeta extends ITestCaseHookMeta {
   /**
    * Metadata for the current test iteration.
    */
-  testIteration: IHookTestIterationMeta;
+  testIteration: ITestIterationHookMetaData;
 }
 
 /**
  * An interface describing the collection of hooks for a `TestSuite`.
  */
 export interface ISuiteHooksCollection {
+
+  beforeEachTest?: TestHook[];
+
+  afterEachTest?: TestHook[];
   /**
-   * The collection of hooks that run before and after, and upon a failure in,
-   * a `TestSuite`.
+   * The collection of hooks to run before a `Test`.
    */
-  suite?: {
-    /**
-     * The collection of hooks to run before a `TestSuite`.
-     */
-    start?: SuiteHook[];
-    /**
-     * The collection of hooks to run after a `TestSuite`.
-     */
-    end?: SuiteHook[];
-    /**
-     * The collection of hooks to run when a test fails within a `TestSuite`.
-     *
-     * These hooks are passed to the test and run before any hooks that are
-     * defined on the test.
-     */
-    fail?: TestFailureHook[];
-  };
+  testStart?: TestHook[];
   /**
-   * The collection of hooks that run before and after, and upon a failure in,
-   * a `Test`.
-   *
-   * These hooks are passed to the test and run before any hooks that are
-   * defined on the test.
+   * The collection of hooks to run after a `Test`.
    */
-  test?: {
-    /**
-     * The collection of hooks to run before a `Test`.
-     */
-    start?: TestHook[];
-    /**
-     * The collection of hooks to run after a `Test`.
-     */
-    end?: TestHook[];
-    /**
-     * The collection of hooks to run when a test fails within a `Test`.
-     */
-    fail?: TestFailureHook[];
-  };
+  testEnd?: TestHook[];
   /**
-   * The collection of hooks that run before and after a `TestCase`.
-   *
-   * These hooks are passed to the test and run before any hooks that are
-   * defined on the test.
+   * The collection of hooks to run when a test fails within a `Test`.
    */
-  testCase?: {
-    /**
-     * The collection of hooks to run before a `TestCase`.
-     */
-    start?: TestCaseHook[];
-    /**
-     * The collection of hooks to run after a `TestCase`.
-     */
-    end?: TestCaseHook[];
-  };
+  testFail?: TestFailureHook[];
+  
   /**
-   * The collection of hooks that run before and after a `TestIteration`.
-   *
-   * These hooks are passed to the test and run before any hooks that are
-   * defined on the test.
+   * The collection of hooks to run before a `TestCase`.
    */
-  testIteration?: {
-    /**
-     * The collection of hooks to run before a `TestIteration`.
-     */
-    start?: TestIterationHook[];
-    /**
-     * The collection of hooks to run after a `TestIteration`.
-     */
-    end?: TestIterationHook[];
-  };
+  testCaseStart?: TestCaseHook[];
+  /**
+   * The collection of hooks to run after a `TestCase`.
+   */
+  testCaseEnd?: TestCaseHook[];
+  /**
+   * The collection of hooks to run before a `TestIteration`.
+   */
+  testIterationStart?: TestIterationHook[];
+  /**
+   * The collection of hooks to run after a `TestIteration`.
+   */
+  testIterationEnd?: TestIterationHook[];
 }
 
 /**
@@ -265,7 +224,7 @@ export interface TTestCtor<T = unknown> {
   /**
    * The UUID for tracking test suites.
    */
-  kitaiId?: string;
+  __testId?: string;
 }
 
 /**
@@ -308,7 +267,7 @@ export type TestIterationHook = (meta: ITestIterationHookMeta) => void;
 export type TestFailureHook = (
   error: Error,
   meta: ITestIterationHookMeta,
-) => boolean;
+) => string | boolean;
 
 export type TestMethod<T extends unknown[] = []> = (
   args: T,
@@ -322,5 +281,12 @@ export type TUnionIntersection<U> = (
 
 export type ITestHooksCollection = Pick<
   ISuiteHooksCollection,
-  "test" | "testCase" | "testIteration"
->;
+  "testStart" | "testEnd" | "testFail" | "testCaseEnd" | "testCaseStart" | "testIterationStart" | "testIterationEnd"
+>; 
+
+export interface ITestMeta {
+  suite: ISuiteHookMetaData;
+  test: ITestHookMetaData;
+  testCase: ITestCaseHookMetaData;
+  testIteration: ITestIterationHookMetaData;
+}

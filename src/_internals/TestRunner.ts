@@ -1,5 +1,5 @@
 import type {
-  IHookSuiteMeta,
+  ISuiteHookMetaData,
   ITestOptions,
   SuiteHook,
   TestCaseHook,
@@ -18,7 +18,7 @@ export class TestRunner {
 
   protected tests: { [key: string]: Test } = {};
 
-  protected calcMeta?: IHookSuiteMeta;
+  protected calcMeta?: ISuiteHookMetaData;
 
   constructor(
     public displayName: string,
@@ -33,40 +33,30 @@ export class TestRunner {
     return hooks;
   }
 
-  public addTestSuiteHook(position: "start" | "end", hook: SuiteHook): number {
+  public addWrappedTestHook(position: "before" | "after", hook: TestHook): number {
     const hooks = this.getHooks();
-    const suite = hooks.suite = hooks.suite || {};
-    const list = suite[position] = suite[position] || [];
-    suite[position] = [hook, ...list];
+    const hookName = position === "before" ? "beforeEachTest" : "afterEachTest";
+    const list = hooks[hookName] = hooks[hookName] || [];
+    hooks[hookName] = [hook, ...list];
 
-    return suite[position]!.length;
-  }
-
-  public addTestSuiteFailHook(hook: TestFailureHook): number {
-    const hooks = this.getHooks();
-    const suite = hooks.suite = hooks.suite || {};
-    const list = suite.fail = suite.fail || [];
-    suite.fail = [hook, ...list];
-
-    return suite.fail.length;
+    return hooks[hookName]!.length;
   }
 
   public addTestHook(position: "start" | "end", hook: TestHook): number {
     const hooks = this.getHooks();
-    const test = hooks.test = hooks.test || {};
-    const list = test[position] = test[position] || [];
-    test[position] = [hook, ...list];
+    const hookName = position === "start" ? "testStart" : "testEnd";
+    const list = hooks[hookName] = hooks[hookName] || [];
+    hooks[hookName] = [hook, ...list];
 
-    return test[position]!.length;
+    return hooks[hookName]!.length;
   }
 
   public addTestFailHook(hook: TestFailureHook): number {
     const hooks = this.getHooks();
-    const test = hooks.test = hooks.test || {};
-    const list = test.fail = test.fail || [];
-    test.fail = [hook, ...list];
+    const list = hooks.testFail = hooks.testFail || [];
+    hooks.testFail = [hook, ...list];
 
-    return test.fail.length;
+    return hooks.testFail.length;
   }
 
   public addTestCaseHook(
@@ -74,11 +64,11 @@ export class TestRunner {
     hook: TestCaseHook,
   ): number {
     const hooks = this.getHooks();
-    const testCase = hooks.testCase = hooks.testCase || {};
-    const list = testCase[position] = testCase[position] || [];
-    testCase[position] = [hook, ...list];
+    const hookName = position === "start" ? "testCaseStart" : "testCaseEnd";
+    const list = hooks[hookName] = hooks[hookName] || [];
+    hooks[hookName] = [hook, ...list];
 
-    return testCase[position]!.length;
+    return hooks[hookName]!.length;
   }
 
   public addTestIterationHook(
@@ -86,11 +76,11 @@ export class TestRunner {
     hook: TestIterationHook,
   ): number {
     const hooks = this.getHooks();
-    const testIteration = hooks.testIteration = hooks.testIteration || {};
-    const list = testIteration[position] = testIteration[position] || [];
-    testIteration[position] = [hook, ...list];
+    const hookName = position === "start" ? "testIterationStart" : "testIterationEnd";
+    const list = hooks[hookName] = hooks[hookName] || [];
+    hooks[hookName] = [hook, ...list];
 
-    return testIteration[position]!.length;
+    return hooks[hookName]!.length;
   }
 
   public test(key: string): Test {
@@ -116,7 +106,7 @@ export class TestRunner {
     return this.options;
   }
 
-  public getSuiteMeta(): IHookSuiteMeta {
+  public getSuiteMeta(): ISuiteHookMetaData {
     if (this.calcMeta) return this.calcMeta;
     const { displayName, nestedTestSuites, tests } = this;
     const suiteKeys = Object.keys(nestedTestSuites);
@@ -143,27 +133,21 @@ export class TestRunner {
     };
   }
 
-  public execute(options: ITestOptions = {}) {
+  public async execute(options: ITestOptions = {}) {
     this.mergeOptions(options);
     const testNames = Object.keys(this.tests);
     const testSuites = Object.keys(this.nestedTestSuites);
     const instance = new this.suiteTarget();
-
-    const suite = this.getSuiteMeta();
-
-    options?.hooks?.suite?.start?.forEach((hook) => hook({ suite }));
-
-    testNames.forEach((testName) => {
+ 
+    await testNames.forEach(async (testName) => {
       const test = this.tests[testName];
-      test.execute(testName, instance, this);
+      await test.execute(testName, instance, this);
     });
-
-    testSuites.forEach((suiteName) => {
+    await testSuites.forEach(async (suiteName) => {
       const suite = this.nestedTestSuites[suiteName];
       const nestedTest = getTestSuite(suite);
       nestedTest.displayName = `${this.displayName}/${nestedTest.displayName}`;
-      nestedTest.execute(options);
+      await nestedTest.execute(options);
     });
-    options?.hooks?.suite?.end?.forEach((hook) => hook({ suite }));
   }
 }

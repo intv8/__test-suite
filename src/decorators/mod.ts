@@ -1,3 +1,5 @@
+import { AfterEach as _AfterEach } from "./AfterEach.ts";
+import { BeforeEach as _BeforeEach } from "./BeforeEach.ts";
 import { Test as _Test } from "./Test.ts";
 import { TestCase as _TestCase } from "./TestCase.ts";
 import { TestCaseEnd as _TestCaseEnd } from "./TestCaseEnd.ts";
@@ -9,10 +11,9 @@ import { TestIterations as _TestIterations } from "./TestIterations.ts";
 import { TestIterationStart as _TestIterationStart } from "./TestIterationStart.ts";
 import { TestStart as _TestStart } from "./TestStart.ts";
 import { TestSuite as _TestSuite } from "./TestSuite.ts";
-import { TestSuiteEnd as _TestSuiteEnd } from "./TestSuiteEnd.ts";
-import { TestSuiteFail as _TestSuiteFail } from "./TestSuiteFail.ts";
-import { TestSuiteStart as _TestSuiteStart } from "./TestSuiteStart.ts";
 
+export const AfterEach = _AfterEach;
+export const BeforeEach = _BeforeEach;
 export const Test = _Test;
 export const TestCase = _TestCase;
 export const TestCaseEnd = _TestCaseEnd;
@@ -24,11 +25,10 @@ export const TestIterations = _TestIterations;
 export const TestIterationStart = _TestIterationStart;
 export const TestStart = _TestStart;
 export const TestSuite = _TestSuite;
-export const TestSuiteEnd = _TestSuiteEnd;
-export const TestSuiteFail = _TestSuiteFail;
-export const TestSuiteStart = _TestSuiteStart;
 
 export default {
+  AfterEach,
+  BeforeEach,
   Test,
   TestCase,
   TestCaseEnd,
@@ -40,7 +40,4 @@ export default {
   TestIterationStart,
   TestStart,
   TestSuite,
-  TestSuiteEnd,
-  TestSuiteFail,
-  TestSuiteStart,
 };

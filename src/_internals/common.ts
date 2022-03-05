@@ -1,6 +1,5 @@
 //  Copyright 2021 IntegerEleven. All rights reserved. MIT license.
 
-import { uuid } from "../../deps.ts";
 import { TestRunner } from "../_internals/TestRunner.ts";
 import type { Test } from "../_internals/Test.ts";
 import type { TTestCtor } from "../types.ts";
@@ -29,19 +28,19 @@ const config = {
 export const getTestSuite = (
   target: TTestCtor,
 ): TestRunner => {
-  if (!target.kitaiId) {
-    target.kitaiId = uuid.generate();
+  if (!target.__testId) {
+    target.__testId = crypto.randomUUID();
   }
 
-  const kid = target.kitaiId;
+  const tid = target.__testId;
   const result = target.name.replace(/([A-Z])/g, " $1");
   const finalResult = result.charAt(0).toUpperCase() + result.slice(1);
 
-  if (!RUNNERS[kid]) {
-    RUNNERS[kid] = new TestRunner(finalResult.trim(), target);
+  if (!RUNNERS[tid]) {
+    RUNNERS[tid] = new TestRunner(finalResult.trim(), target);
   }
 
-  return RUNNERS[kid];
+  return RUNNERS[tid];
 };
 
 export const setNamingFunc = (
